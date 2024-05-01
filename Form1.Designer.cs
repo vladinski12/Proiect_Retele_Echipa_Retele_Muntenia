@@ -40,11 +40,11 @@
 			clientPortLabel = new Label();
 			clientIPLabel = new Label();
 			clientIPTextBox = new TextBox();
-			clientsListBox = new CheckedListBox();
 			clientsGroupBox = new GroupBox();
+			clientsListBox = new ListBox();
 			queryButton = new Button();
 			outputGroupBox = new GroupBox();
-			textBox1 = new TextBox();
+			outputTextBox = new TextBox();
 			serverGroupBox.SuspendLayout();
 			clientGroupBox.SuspendLayout();
 			clientsGroupBox.SuspendLayout();
@@ -73,14 +73,15 @@
 			serverStartButton.TabIndex = 4;
 			serverStartButton.Text = "START";
 			serverStartButton.UseVisualStyleBackColor = true;
+			serverStartButton.Click += serverStartButton_Click;
 			// 
 			// serverPortTextBox
 			// 
 			serverPortTextBox.Location = new Point(344, 51);
 			serverPortTextBox.Name = "serverPortTextBox";
+			serverPortTextBox.PlaceholderText = "3000";
 			serverPortTextBox.Size = new Size(176, 27);
 			serverPortTextBox.TabIndex = 3;
-			serverPortTextBox.Text = "3000";
 			// 
 			// serverPortLabel
 			// 
@@ -104,9 +105,10 @@
 			// 
 			serverIPTextBox.Location = new Point(27, 51);
 			serverIPTextBox.Name = "serverIPTextBox";
+			serverIPTextBox.PlaceholderText = "127.0.0.1";
+			serverIPTextBox.ReadOnly = true;
 			serverIPTextBox.Size = new Size(261, 27);
 			serverIPTextBox.TabIndex = 0;
-			serverIPTextBox.Text = "127.0.0.1";
 			// 
 			// clientGroupBox
 			// 
@@ -130,6 +132,7 @@
 			clientConnectButton.TabIndex = 4;
 			clientConnectButton.Text = "CONNECT";
 			clientConnectButton.UseVisualStyleBackColor = true;
+			clientConnectButton.Click += clientConnectButton_Click;
 			// 
 			// clientPortTextBox
 			// 
@@ -165,24 +168,25 @@
 			clientIPTextBox.TabIndex = 0;
 			clientIPTextBox.Text = "127.0.0.1";
 			// 
-			// clientsListBox
-			// 
-			clientsListBox.FormattingEnabled = true;
-			clientsListBox.Location = new Point(33, 38);
-			clientsListBox.Name = "clientsListBox";
-			clientsListBox.Size = new Size(593, 554);
-			clientsListBox.TabIndex = 2;
-			// 
 			// clientsGroupBox
 			// 
-			clientsGroupBox.Controls.Add(queryButton);
 			clientsGroupBox.Controls.Add(clientsListBox);
+			clientsGroupBox.Controls.Add(queryButton);
 			clientsGroupBox.Location = new Point(708, 143);
 			clientsGroupBox.Name = "clientsGroupBox";
 			clientsGroupBox.Size = new Size(682, 710);
 			clientsGroupBox.TabIndex = 3;
 			clientsGroupBox.TabStop = false;
 			clientsGroupBox.Text = "Clients";
+			// 
+			// clientsListBox
+			// 
+			clientsListBox.FormattingEnabled = true;
+			clientsListBox.Location = new Point(6, 38);
+			clientsListBox.Name = "clientsListBox";
+			clientsListBox.SelectionMode = SelectionMode.MultiSimple;
+			clientsListBox.Size = new Size(670, 584);
+			clientsListBox.TabIndex = 4;
 			// 
 			// queryButton
 			// 
@@ -192,10 +196,11 @@
 			queryButton.TabIndex = 3;
 			queryButton.Text = "Query";
 			queryButton.UseVisualStyleBackColor = true;
+			queryButton.Click += queryButton_Click;
 			// 
 			// outputGroupBox
 			// 
-			outputGroupBox.Controls.Add(textBox1);
+			outputGroupBox.Controls.Add(outputTextBox);
 			outputGroupBox.Location = new Point(12, 143);
 			outputGroupBox.Name = "outputGroupBox";
 			outputGroupBox.Size = new Size(690, 710);
@@ -203,19 +208,20 @@
 			outputGroupBox.TabStop = false;
 			outputGroupBox.Text = "Output";
 			// 
-			// textBox1
+			// outputTextBox
 			// 
-			textBox1.Location = new Point(6, 38);
-			textBox1.Multiline = true;
-			textBox1.Name = "textBox1";
-			textBox1.Size = new Size(665, 666);
-			textBox1.TabIndex = 0;
+			outputTextBox.Location = new Point(6, 38);
+			outputTextBox.Multiline = true;
+			outputTextBox.Name = "outputTextBox";
+			outputTextBox.ReadOnly = true;
+			outputTextBox.Size = new Size(665, 666);
+			outputTextBox.TabIndex = 0;
 			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(8F, 20F);
 			AutoScaleMode = AutoScaleMode.Font;
-			ClientSize = new Size(1402, 865);
+			ClientSize = new Size(1427, 888);
 			Controls.Add(outputGroupBox);
 			Controls.Add(clientsGroupBox);
 			Controls.Add(clientGroupBox);
@@ -246,10 +252,10 @@
 		private Label clientPortLabel;
 		private Label clientIPLabel;
 		private TextBox clientIPTextBox;
-		private CheckedListBox clientsListBox;
 		private GroupBox clientsGroupBox;
 		private Button queryButton;
 		private GroupBox outputGroupBox;
-		private TextBox textBox1;
+		private TextBox outputTextBox;
+		private ListBox clientsListBox;
 	}
 }
