@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Proiect_Retele_Echipa_Retele_Muntenia", "Proiect_Retele_Echipa_Retele_Muntenia.csproj", "{291E1025-E289-4E0A-8712-7D8957C87476}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client", "Client.csproj", "{291E1025-E289-4E0A-8712-7D8957C87476}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "..\Server\Server.csproj", "{47D02236-AD3F-434F-8C39-4941D38C254D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{291E1025-E289-4E0A-8712-7D8957C87476}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{291E1025-E289-4E0A-8712-7D8957C87476}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{291E1025-E289-4E0A-8712-7D8957C87476}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47D02236-AD3F-434F-8C39-4941D38C254D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47D02236-AD3F-434F-8C39-4941D38C254D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47D02236-AD3F-434F-8C39-4941D38C254D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47D02236-AD3F-434F-8C39-4941D38C254D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

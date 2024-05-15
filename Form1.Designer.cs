@@ -28,12 +28,6 @@
 		/// </summary>
 		private void InitializeComponent()
 		{
-			serverGroupBox = new GroupBox();
-			serverStartButton = new Button();
-			serverPortTextBox = new TextBox();
-			serverPortLabel = new Label();
-			serverIPLabel = new Label();
-			serverIPTextBox = new TextBox();
 			clientGroupBox = new GroupBox();
 			clientConnectButton = new Button();
 			clientPortTextBox = new TextBox();
@@ -45,81 +39,24 @@
 			queryButton = new Button();
 			outputGroupBox = new GroupBox();
 			outputTextBox = new TextBox();
-			serverGroupBox.SuspendLayout();
+			queryTextBox = new TextBox();
 			clientGroupBox.SuspendLayout();
 			clientsGroupBox.SuspendLayout();
 			outputGroupBox.SuspendLayout();
 			SuspendLayout();
 			// 
-			// serverGroupBox
-			// 
-			serverGroupBox.Controls.Add(serverStartButton);
-			serverGroupBox.Controls.Add(serverPortTextBox);
-			serverGroupBox.Controls.Add(serverPortLabel);
-			serverGroupBox.Controls.Add(serverIPLabel);
-			serverGroupBox.Controls.Add(serverIPTextBox);
-			serverGroupBox.Location = new Point(12, 12);
-			serverGroupBox.Name = "serverGroupBox";
-			serverGroupBox.Size = new Size(690, 125);
-			serverGroupBox.TabIndex = 0;
-			serverGroupBox.TabStop = false;
-			serverGroupBox.Text = "Server";
-			// 
-			// serverStartButton
-			// 
-			serverStartButton.Location = new Point(532, 50);
-			serverStartButton.Name = "serverStartButton";
-			serverStartButton.Size = new Size(94, 29);
-			serverStartButton.TabIndex = 4;
-			serverStartButton.Text = "START";
-			serverStartButton.UseVisualStyleBackColor = true;
-			serverStartButton.Click += serverStartButton_Click;
-			// 
-			// serverPortTextBox
-			// 
-			serverPortTextBox.Location = new Point(344, 51);
-			serverPortTextBox.Name = "serverPortTextBox";
-			serverPortTextBox.PlaceholderText = "3000";
-			serverPortTextBox.Size = new Size(176, 27);
-			serverPortTextBox.TabIndex = 3;
-			// 
-			// serverPortLabel
-			// 
-			serverPortLabel.AutoSize = true;
-			serverPortLabel.Location = new Point(294, 55);
-			serverPortLabel.Name = "serverPortLabel";
-			serverPortLabel.Size = new Size(44, 20);
-			serverPortLabel.TabIndex = 2;
-			serverPortLabel.Text = "PORT";
-			// 
-			// serverIPLabel
-			// 
-			serverIPLabel.AutoSize = true;
-			serverIPLabel.Location = new Point(6, 55);
-			serverIPLabel.Name = "serverIPLabel";
-			serverIPLabel.Size = new Size(21, 20);
-			serverIPLabel.TabIndex = 1;
-			serverIPLabel.Text = "IP";
-			// 
-			// serverIPTextBox
-			// 
-			serverIPTextBox.Location = new Point(27, 51);
-			serverIPTextBox.Name = "serverIPTextBox";
-			serverIPTextBox.PlaceholderText = "127.0.0.1";
-			serverIPTextBox.ReadOnly = true;
-			serverIPTextBox.Size = new Size(261, 27);
-			serverIPTextBox.TabIndex = 0;
-			// 
 			// clientGroupBox
 			// 
+			clientGroupBox.Controls.Add(queryTextBox);
 			clientGroupBox.Controls.Add(clientConnectButton);
+			clientGroupBox.Controls.Add(queryButton);
 			clientGroupBox.Controls.Add(clientPortTextBox);
 			clientGroupBox.Controls.Add(clientPortLabel);
 			clientGroupBox.Controls.Add(clientIPLabel);
 			clientGroupBox.Controls.Add(clientIPTextBox);
-			clientGroupBox.Location = new Point(708, 12);
+			clientGroupBox.Location = new Point(18, 12);
 			clientGroupBox.Name = "clientGroupBox";
-			clientGroupBox.Size = new Size(682, 125);
+			clientGroupBox.Size = new Size(1372, 125);
 			clientGroupBox.TabIndex = 1;
 			clientGroupBox.TabStop = false;
 			clientGroupBox.Text = "Client";
@@ -138,9 +75,10 @@
 			// 
 			clientPortTextBox.Location = new Point(344, 51);
 			clientPortTextBox.Name = "clientPortTextBox";
+			clientPortTextBox.PlaceholderText = "1234";
 			clientPortTextBox.Size = new Size(176, 27);
 			clientPortTextBox.TabIndex = 3;
-			clientPortTextBox.Text = "3000";
+			clientPortTextBox.Text = "1234";
 			// 
 			// clientPortLabel
 			// 
@@ -164,6 +102,7 @@
 			// 
 			clientIPTextBox.Location = new Point(33, 51);
 			clientIPTextBox.Name = "clientIPTextBox";
+			clientIPTextBox.ReadOnly = true;
 			clientIPTextBox.Size = new Size(255, 27);
 			clientIPTextBox.TabIndex = 0;
 			clientIPTextBox.Text = "127.0.0.1";
@@ -171,7 +110,6 @@
 			// clientsGroupBox
 			// 
 			clientsGroupBox.Controls.Add(clientsListBox);
-			clientsGroupBox.Controls.Add(queryButton);
 			clientsGroupBox.Location = new Point(708, 143);
 			clientsGroupBox.Name = "clientsGroupBox";
 			clientsGroupBox.Size = new Size(682, 710);
@@ -185,12 +123,12 @@
 			clientsListBox.Location = new Point(6, 38);
 			clientsListBox.Name = "clientsListBox";
 			clientsListBox.SelectionMode = SelectionMode.MultiSimple;
-			clientsListBox.Size = new Size(670, 584);
+			clientsListBox.Size = new Size(670, 664);
 			clientsListBox.TabIndex = 4;
 			// 
 			// queryButton
 			// 
-			queryButton.Location = new Point(302, 641);
+			queryButton.Location = new Point(1272, 50);
 			queryButton.Name = "queryButton";
 			queryButton.Size = new Size(94, 29);
 			queryButton.TabIndex = 3;
@@ -217,6 +155,14 @@
 			outputTextBox.Size = new Size(665, 666);
 			outputTextBox.TabIndex = 0;
 			// 
+			// queryTextBox
+			// 
+			queryTextBox.Location = new Point(696, 52);
+			queryTextBox.Name = "queryTextBox";
+			queryTextBox.PlaceholderText = "Enter Query";
+			queryTextBox.Size = new Size(570, 27);
+			queryTextBox.TabIndex = 5;
+			// 
 			// Form1
 			// 
 			AutoScaleDimensions = new SizeF(8F, 20F);
@@ -225,11 +171,8 @@
 			Controls.Add(outputGroupBox);
 			Controls.Add(clientsGroupBox);
 			Controls.Add(clientGroupBox);
-			Controls.Add(serverGroupBox);
 			Name = "Form1";
 			Text = "Form1";
-			serverGroupBox.ResumeLayout(false);
-			serverGroupBox.PerformLayout();
 			clientGroupBox.ResumeLayout(false);
 			clientGroupBox.PerformLayout();
 			clientsGroupBox.ResumeLayout(false);
@@ -239,13 +182,6 @@
 		}
 
 		#endregion
-
-		private GroupBox serverGroupBox;
-		private Label serverIPLabel;
-		private TextBox serverIPTextBox;
-		private Label serverPortLabel;
-		private TextBox serverPortTextBox;
-		private Button serverStartButton;
 		private GroupBox clientGroupBox;
 		private Button clientConnectButton;
 		private TextBox clientPortTextBox;
@@ -257,5 +193,6 @@
 		private GroupBox outputGroupBox;
 		private TextBox outputTextBox;
 		private ListBox clientsListBox;
+		private TextBox queryTextBox;
 	}
 }

@@ -1,122 +1,91 @@
 using System.Net;
 using System.Net.Sockets;
-using System.ComponentModel;
-using Proiect_Retele_Echipa_Retele_Muntenia.Models;
 using Newtonsoft.Json;
+using Client.Models;
+using System.Management;
 
 namespace Proiect_Retele_Echipa_Retele_Muntenia
 {
-
-	// SERVER:
-	// serverStartButton_Click - start server
-	// backgroundWorker1_DoWork - accept client connections
-	// backgroundWorker2_DoWork - handle client sent packets
-
-	// CLIENT: 
-	// clientConnectButton_Click - connect to server
-	// backgroundWorker3_DoWork - handle server data sent to client
-	// queryButton_Click - send query to server
-
 	public partial class Form1 : Form
 	{
-		private TcpListener listener;
-		private TcpClient client;
-		private List<TcpClient> clients;
-		private StreamReader reader;
-		private StreamWriter writer;
+		private TcpClient _client;
+		private PacketReader _packetReader;
+		private List<User> _users;
 
-		/// <summary>
-		/// Set default server IP address
-		/// </summary>
 		public Form1()
 		{
 			InitializeComponent();
-			clients = new List<TcpClient>();
+			_client = new TcpClient();
+			_users = new List<User>();
 			IPAddress[] localIP = Dns.GetHostAddresses(Dns.GetHostName());
 			foreach (IPAddress address in localIP)
 			{
 				if (address.AddressFamily == AddressFamily.InterNetwork)
 				{
-					serverIPTextBox.Text = address.ToString();
+					clientIPTextBox.Text = address.ToString();
 				}
 			}
+			queryTextBox.ReadOnly = true;
 		}
 
-		/// <summary>
-		/// SERVER: Handle server start button click event
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
-		private void serverStartButton_Click(object sender, EventArgs e)
-		{
-			int port;
-			if (!int.TryParse(serverPortTextBox.Text, out port))
-			{
-				MessageBox.Show("Invalid port number");
-				return;
-			}
-			try
-			{
-				listener = new TcpListener(IPAddress.Any, port);
-				listener.Start();
-				outputTextBox.AppendText(String.Format("Server started on {0}:{1}", serverIPTextBox.Text, serverPortTextBox.Text));
-				outputTextBox.AppendText(Environment.NewLine);
-				//clientConnectButton.Enabled = false;
-				//queryButton.Enabled = false;
-				Thread thread = new Thread(HandleClientConnections);
-				thread.Start();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.Message);
-			}
-		}
-
-		/// <summary>
-		/// CLIENT: Handle client connection button click event
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
 		private void clientConnectButton_Click(object sender, EventArgs e)
 		{
 			try
 			{
-				client = new TcpClient();
-				IPEndPoint clientEnpoint = new IPEndPoint(IPAddress.Parse(clientIPTextBox.Text), int.Parse(clientPortTextBox.Text));
-				client.Connect(clientEnpoint);
-				outputTextBox.AppendText(String.Format("Connected to server on {0}:{1}", clientIPTextBox.Text, clientPortTextBox.Text));
+				if (_client.Connected)
+				{
+					MessageBox.Show("Client is already connected");
+					return;
+				}
+				int port;
+				if (!int.TryParse(clientPortTextBox.Text, out port))
+				{
+					MessageBox.Show("Invalid port");
+					return;
+				}
+				_client.Connect("127.0.0.1", port);
+				_packetReader = new PacketReader(_client.GetStream());
+				var connectPacket = new PacketBuilder();
+				connectPacket.WriteOpCode(0);
+				connectPacket.WriteString(_client.Client.RemoteEndPoint.ToString());
+				connectPacket.WriteString(ExecuteWMIQuery("SELECT Name FROM Win32_ComputerSystem"));
+				_client.Client.Send(connectPacket.GetPacketBytes());
+				ReadPackets();
+
+				outputTextBox.AppendText("Connected to server");
 				outputTextBox.AppendText(Environment.NewLine);
-				reader = new StreamReader(client.GetStream());
-				writer = new StreamWriter(client.GetStream());
-				writer.AutoFlush = true;
-				serverStartButton.Enabled = false;
-				Thread clientThread = new Thread(HandleServerDataSent);
-				clientThread.Start();
+				clientPortTextBox.Enabled = false;
+				clientConnectButton.Enabled = false;
+				queryTextBox.ReadOnly = false;
 			}
 			catch (Exception ex)
 			{
 				MessageBox.Show(ex.Message);
 			}
 		}
-
-		/// <summary>
-		/// CLIENT: Handle send query button click event
-		/// </summary>
-		/// <param name="sender"></param>
-		/// <param name="e"></param>
 
 		private void queryButton_Click(object sender, EventArgs e)
 		{
 			try
 			{
-				List<string> clientsToQuery = new List<string>();
+				if (clientsListBox.SelectedItems.Count == 0)
+				{
+					MessageBox.Show("No clients selected");
+					return;
+				}
+				if (string.IsNullOrEmpty(queryTextBox.Text))
+				{
+					MessageBox.Show("Query is empty");
+					return;
+				}
 				foreach (var item in clientsListBox.SelectedItems)
 				{
-					clientsToQuery.Add(item.ToString());
+					var queryPacket = new PacketBuilder();
+					queryPacket.WriteOpCode(3);
+					queryPacket.WriteString(item.ToString().Split("Address:")[1].Trim());
+					queryPacket.WriteString(queryTextBox.Text);
+					_client.Client.Send(queryPacket.GetPacketBytes());
 				}
-				ClientNetworkPacket clientNetworkPacket = new SendQueryPacket(clientsToQuery);
-				string json = JsonConvert.SerializeObject(clientNetworkPacket);
-				writer.WriteLine(json);
 			}
 			catch (Exception ex)
 			{
@@ -124,148 +93,114 @@ namespace Proiect_Retele_Echipa_Retele_Muntenia
 			}
 		}
 
-		/// <summary>
-		/// SERVER: Handle connections from clients
-		/// </summary>
-		private void HandleClientConnections()
+		private void ReadPackets()
 		{
-			while (true)
+			Task.Run(() =>
 			{
-				TcpClient client = listener.AcceptTcpClient();
-				clients.Add(client);
-				outputTextBox.Invoke(new MethodInvoker(delegate ()
+				while (true)
 				{
-					outputTextBox.AppendText(String.Format("Client connected: {0}", client.Client.RemoteEndPoint.ToString()));
-					outputTextBox.AppendText(Environment.NewLine);
-				}));
-				Thread serverThread = new Thread(() => HandleClientSentPackets(client));
-				serverThread.Start();
-			}
-		}
-
-
-		/// <summary>
-		/// SERVER: Handle client sent packets
-		/// </summary>
-		/// <param name="client"></param>
-		private void HandleClientSentPackets(TcpClient client)
-		{
-			try
-			{
-				using StreamReader reader = new StreamReader(client.GetStream());
-				using StreamWriter writer = new StreamWriter(client.GetStream());
-				writer.AutoFlush = true;
-				clientsListBox.Invoke(new MethodInvoker(delegate ()
-				{
-					clientsListBox.Items.Add(client.Client.RemoteEndPoint.ToString());
-				}));
-				foreach (TcpClient item in clients)
-				{
-					ServerNetworkPacket serverNetworkPacket = new NotifyClientsWhenClientConnectsPacket(client.Client.RemoteEndPoint.ToString());
-					string jsonToSend = JsonConvert.SerializeObject(serverNetworkPacket);
-					writer.WriteLine(jsonToSend);
-				}
-				while (client.Connected)
-				{
-					string json = reader.ReadLine();
-					outputTextBox.Invoke(new MethodInvoker(delegate ()
+					var opcode = _packetReader.ReadByte();
+					switch (opcode)
 					{
-						outputTextBox.AppendText(String.Format("Received data from client {0} - {1}", client.Client.RemoteEndPoint.ToString(),json));
-						outputTextBox.AppendText(Environment.NewLine);
-					}));
-					ClientNetworkPacket packet = JsonConvert.DeserializeObject<ClientNetworkPacket>(json);
-					if (packet.Action == ClientActions.SendQuery)
-					{
-						SendQueryPacket sendQueryPacket = JsonConvert.DeserializeObject<SendQueryPacket>(json);
-						foreach (string clientAddress in sendQueryPacket.ClientsToQuery)
-						{
-							foreach (TcpClient item in clients)
+						case 1:
 							{
-								if (item.Connected && item.Client.RemoteEndPoint.ToString() == clientAddress)
+								var address = _packetReader.ReadMessage();
+								var name = _packetReader.ReadMessage();
+								if (_users.Any(u => u.Address == address))
 								{
-									using StreamWriter writerClient = new StreamWriter(item.GetStream());
-									writerClient.AutoFlush = true;
-									ServerNetworkPacket serverNetworkPacket = new NotifyClientsWhenClientSendsQueryPacket(client.Client.RemoteEndPoint.ToString());
-									string jsonToSend = JsonConvert.SerializeObject(serverNetworkPacket);
-									writerClient.WriteLine(jsonToSend);
+									break;
 								}
+								_users.Add(new User(address, name));
+								clientsListBox.Invoke(new Action(() =>
+								{
+									clientsListBox.Items.Add($"Name: {name} - Address: {address}");
+								}));
+								break;
 							}
-						}
-					}
-					if (packet.Action == ClientActions.SendWMIData)
-					{
-						SendWMIDataPacket sendWMIDataPacket = JsonConvert.DeserializeObject<SendWMIDataPacket>(json);
-						WMIData wmiData = sendWMIDataPacket.wmiData;
-						outputTextBox.Invoke(new MethodInvoker(delegate ()
-						{
-							outputTextBox.AppendText(String.Format("Received WMI data from client {0}", wmiData.ClientName));
-							outputTextBox.AppendText(Environment.NewLine);
-						}));
-						TcpClient targetClient = clients.Find(x => x.Client.RemoteEndPoint.ToString() == sendWMIDataPacket.TargetClient);
-						using StreamWriter writerClient = new StreamWriter(targetClient.GetStream());
-						writerClient.AutoFlush = true;
-						ServerNetworkPacket serverNetworkPacket = new NotifyClientSendWMIDataPacket(client.Client.RemoteEndPoint.ToString(), wmiData);
-						string jsonToSend = JsonConvert.SerializeObject(serverNetworkPacket);
-						writerClient.WriteLine(jsonToSend);
+						case 2:
+							{
+								var address = _packetReader.ReadMessage();
+								_users.RemoveAll(u => u.Address == address);
+								clientsListBox.Invoke(new Action(() =>
+								{
+									clientsListBox.Items.Remove(address);
+								}));
+								break;
+							}
+						case 4:
+							{
+								var targetAddress = _packetReader.ReadMessage();
+								var query = _packetReader.ReadMessage();
+								var queryResult = ExecuteWMIQuery(query);
+								var wmiPacket = new PacketBuilder();
+								wmiPacket.WriteOpCode(5);
+								wmiPacket.WriteString(targetAddress);
+								wmiPacket.WriteString(_client.Client.RemoteEndPoint.ToString());
+								wmiPacket.WriteString(JsonConvert.SerializeObject(queryResult));
+								_client.Client.Send(wmiPacket.GetPacketBytes());
+								outputTextBox.Invoke(new Action(() =>
+								{
+									outputTextBox.AppendText($"Sent WMI data to {targetAddress}");
+									outputTextBox.AppendText(Environment.NewLine);
+
+								}));
+								break;
+							}
+						case 6:
+							{
+								var fromAddress = _packetReader.ReadMessage();
+								var data = _packetReader.ReadMessage();
+								var wmiData = JsonConvert.DeserializeObject(data);
+								outputTextBox.Invoke(new Action(() =>
+								{
+									outputTextBox.AppendText($"Received WMI data from {fromAddress}");
+									outputTextBox.AppendText(Environment.NewLine);
+									outputTextBox.AppendText(wmiData.ToString());
+								}));
+								break;
+							}
+						case 7:
+							{
+								var message = _packetReader.ReadMessage();
+								MessageBox.Show(message);
+								_client.Dispose();
+								this.Close();
+								break;
+							}
+						default:
+							MessageBox.Show("Invalid opcode");
+							break;
 					}
 				}
-				clients.Remove(client);
-				client.Close();
-			}
-			catch (Exception ex)
-			{
-				MessageBox.Show(ex.Message);
-			}
+			});
 		}
 
-		/// <summary>
-		/// CLIENT: Handle server data sent to client
-		/// </summary>
-		private void HandleServerDataSent()
+		public string ExecuteWMIQuery(string query)
 		{
-			try
+			string result = "";
+			Dictionary<string, string> queryResult = new Dictionary<string, string>();
+			ConnectionOptions options = new ConnectionOptions();
+			options.Impersonation = ImpersonationLevel.Impersonate;
+			ManagementScope scope = new ManagementScope(@"\\.\root\cimv2", options);
+			scope.Connect();
+			ObjectQuery objectQuery = new ObjectQuery(query);
+			ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, objectQuery);
+			ManagementObjectCollection queryCollection = searcher.Get();
+			foreach (ManagementObject queryObject in queryCollection)
 			{
-				while (client.Connected)
+				foreach (PropertyData property in queryObject.Properties)
 				{
-					string json = reader.ReadLine();
-
-					ServerNetworkPacket packet = JsonConvert.DeserializeObject<ServerNetworkPacket>(json);
-					if (packet.Action == ServerActions.NotifyClientsWhenClientConnects)
+					if (!queryResult.ContainsKey(property.Name))
 					{
-						NotifyClientsWhenClientConnectsPacket notifyClientsWhenClientConnectsPacket = JsonConvert.DeserializeObject<NotifyClientsWhenClientConnectsPacket>(json);
-						clientsListBox.Invoke(new MethodInvoker(delegate ()
-						{
-							clientsListBox.Items.Add(notifyClientsWhenClientConnectsPacket.ClientName);
-						}));
-					}
-					else if (packet.Action == ServerActions.NotifyClientsWhenClientSendsQuery)
-					{
-						NotifyClientsWhenClientSendsQueryPacket notifyClientsWhenClientSendsQueryPacket = JsonConvert.DeserializeObject<NotifyClientsWhenClientSendsQueryPacket>(json);
-						outputTextBox.Invoke(new MethodInvoker(delegate ()
-						{
-							outputTextBox.AppendText(String.Format("Client {0} sent a query", notifyClientsWhenClientSendsQueryPacket.ClientName));
-							outputTextBox.AppendText(Environment.NewLine);
-						}));
-						WMIData wmiData = new WMIData(notifyClientsWhenClientSendsQueryPacket.ClientName);
-						ClientNetworkPacket clientNetworkPacket = new SendWMIDataPacket(notifyClientsWhenClientSendsQueryPacket.ClientName, wmiData);
-						string jsonToSend = JsonConvert.SerializeObject(clientNetworkPacket);
-						writer.WriteLine(jsonToSend);
-					}
-					else if (packet.Action == ServerActions.NotifyClientSendWMIData)
-					{
-						NotifyClientSendWMIDataPacket notifyClientSendWMIDataPacket = JsonConvert.DeserializeObject<NotifyClientSendWMIDataPacket>(json);
-						outputTextBox.Invoke(new MethodInvoker(delegate ()
-						{
-							outputTextBox.AppendText(String.Format("Received WMI data from client {0}", notifyClientSendWMIDataPacket.WmiData.ToString()));
-							outputTextBox.AppendText(Environment.NewLine);
-						}));
+						queryResult[property.Name] = property.Value.ToString();
 					}
 				}
 			}
-			catch (Exception ex)
+			foreach (var item in queryResult)
 			{
-				MessageBox.Show(ex.Message);
+				result += $"{item.Key} : {item.Value}\n";
 			}
+			return result;
 		}
 	}
 }
